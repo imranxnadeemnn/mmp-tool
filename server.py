@@ -1,9 +1,14 @@
 from flask import Flask, request, jsonify, render_template
+import requests
 from macro_engine import apply_macros
 from qr import generate_qr
 from result_view import show_result
 from clickhouse_client import check_redash_connection
-from config import QUERY_ID, REDASH_URL
+from config import (
+    RESULT_PROXY_TIMEOUT,
+    RESULT_PROXY_TOKEN,
+    RESULT_PROXY_URL,
+)
 
 app = Flask(__name__)
 
@@ -12,8 +17,7 @@ app = Flask(__name__)
 def home():
     return render_template(
         "index.html",
-        redash_url=REDASH_URL,
-        redash_query_id=QUERY_ID,
+        result_proxy_enabled=bool(RESULT_PROXY_URL),
     )
 
 
@@ -39,8 +43,37 @@ def generate():
 @app.route("/check", methods=["POST"])
 def check():
 
-    data = request.json
+    data = request.json or {}
     adid = data.get("advertising_id")
+
+    if RESULT_PROXY_URL:
+        headers = {"Content-Type": "application/json"}
+        if RESULT_PROXY_TOKEN:
+            headers["Authorization"] = f"Bearer {RESULT_PROXY_TOKEN}"
+
+        try:
+            response = requests.post(
+                f"{RESULT_PROXY_URL}/proxy-check",
+                headers=headers,
+                json={"advertising_id": adid},
+                timeout=RESULT_PROXY_TIMEOUT,
+            )
+        except requests.RequestException as exc:
+            app.logger.exception("Proxy request failed for advertising_id=%s", adid)
+            return jsonify({
+                "status": "error",
+                "message": f"Unable to reach internal VPN proxy: {exc}",
+            }), 502
+
+        try:
+            proxy_data = response.json()
+        except ValueError:
+            proxy_data = {
+                "status": "error",
+                "message": f"Proxy returned non-JSON response ({response.status_code})",
+            }
+
+        return jsonify(proxy_data), response.status_code
 
     try:
         res = show_result(adid)
@@ -75,6 +108,44 @@ def debug_redash():
     result = check_redash_connection(adid)
     status_code = 200 if result.get("ok") else 502
     return jsonify(result), status_code
+
+
+@app.route("/debug/proxy", methods=["GET"])
+def debug_proxy():
+    if not RESULT_PROXY_URL:
+        return jsonify({
+            "ok": False,
+            "message": "RESULT_PROXY_URL is not configured",
+        }), 400
+
+    headers = {}
+    if RESULT_PROXY_TOKEN:
+        headers["Authorization"] = f"Bearer {RESULT_PROXY_TOKEN}"
+
+    try:
+        response = requests.get(
+            f"{RESULT_PROXY_URL}/health",
+            headers=headers,
+            timeout=RESULT_PROXY_TIMEOUT,
+        )
+    except requests.RequestException as exc:
+        return jsonify({
+            "ok": False,
+            "message": f"Unable to reach proxy: {exc}",
+            "proxy_url": RESULT_PROXY_URL,
+        }), 502
+
+    payload = {
+        "ok": response.ok,
+        "status_code": response.status_code,
+        "proxy_url": RESULT_PROXY_URL,
+    }
+    try:
+        payload["body"] = response.json()
+    except ValueError:
+        payload["body"] = response.text
+
+    return jsonify(payload), (200 if response.ok else 502)
 
 
 if __name__ == "__main__":
