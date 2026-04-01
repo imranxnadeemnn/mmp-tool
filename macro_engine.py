@@ -16,7 +16,6 @@ def apply_macros(url, platform):
     Replace supported local macros:
     - {bundle_id}
     - {click_id}
-    - {platform}
     """
 
     if not url:
@@ -41,13 +40,7 @@ def apply_macros(url, platform):
     url = url.replace("{click_id}", click_id)
 
     # ------------------------------
-    # STEP 3: Platform
-    # ------------------------------
-    if normalized_platform:
-        url = url.replace("{platform}", normalized_platform)
-
-    # ------------------------------
-    # STEP 4: Apply AppsFlyer signing only for AppsFlyer links
+    # STEP 3: Apply AppsFlyer signing only for AppsFlyer links
     # ------------------------------
     if should_sign_with_appsflyer(url):
         url = sign_tracking_url(url)
