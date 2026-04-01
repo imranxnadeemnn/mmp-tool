@@ -14,6 +14,7 @@ REDASH_POLL_INTERVAL = float(os.getenv("REDASH_POLL_INTERVAL", "1"))
 RESULT_PROXY_URL = os.getenv("RESULT_PROXY_URL", "").rstrip("/")
 RESULT_PROXY_TOKEN = os.getenv("RESULT_PROXY_TOKEN", "")
 RESULT_PROXY_TIMEOUT = int(os.getenv("RESULT_PROXY_TIMEOUT", "30"))
+RESULT_VIEWER_URL = os.getenv("RESULT_VIEWER_URL", "http://localhost:8501")
 
 # ClickHouse (future use)
 CH_HOST = os.getenv("CH_HOST", "localhost")

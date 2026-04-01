@@ -8,6 +8,7 @@ from config import (
     RESULT_PROXY_TIMEOUT,
     RESULT_PROXY_TOKEN,
     RESULT_PROXY_URL,
+    RESULT_VIEWER_URL,
 )
 
 app = Flask(__name__)
@@ -18,6 +19,7 @@ def home():
     return render_template(
         "index.html",
         result_proxy_enabled=bool(RESULT_PROXY_URL),
+        result_viewer_url=RESULT_VIEWER_URL,
     )
 
 
