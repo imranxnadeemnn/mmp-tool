@@ -90,9 +90,6 @@
                     <button class="btn btn-dark" onclick="launchLocalResultViewer()">
                         Launch Local Mac Result Viewer
                     </button>
-                    <button class="btn btn-outline-secondary" onclick="copyResultViewerURL()">
-                        Copy Local Viewer URL
-                    </button>
                 </div>
 
                 <div class="mt-3">
@@ -148,12 +145,6 @@ function copyURL() {
     const input = document.getElementById("finalUrl");
     navigator.clipboard.writeText(input.value);
     alert("Copied!");
-}
-
-
-function copyResultViewerURL() {
-    navigator.clipboard.writeText(RESULT_VIEWER_URL);
-    alert("Local result viewer URL copied.");
 }
 
 
