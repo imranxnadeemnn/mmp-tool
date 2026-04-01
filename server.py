@@ -2,6 +2,7 @@ from flask import Flask, request, jsonify, render_template
 from macro_engine import apply_macros
 from qr import generate_qr
 from result_view import show_result
+from clickhouse_client import check_redash_connection
 
 app = Flask(__name__)
 
@@ -39,6 +40,7 @@ def check():
     try:
         res = show_result(adid)
     except Exception as e:
+        app.logger.exception("Redash check failed for advertising_id=%s", adid)
         return jsonify({"status": "error", "message": str(e)})
 
     if res is None:
@@ -51,6 +53,23 @@ def check():
         "status": "success",
         "data": res.to_dict(orient="records")
     })
+
+
+@app.route("/debug/redash", methods=["POST"])
+def debug_redash():
+
+    data = request.json or {}
+    adid = data.get("advertising_id")
+
+    if not adid:
+        return jsonify({
+            "status": "error",
+            "message": "advertising_id is required"
+        }), 400
+
+    result = check_redash_connection(adid)
+    status_code = 200 if result.get("ok") else 502
+    return jsonify(result), status_code
 
 
 if __name__ == "__main__":
