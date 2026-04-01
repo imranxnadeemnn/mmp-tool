@@ -82,13 +82,13 @@
                 </div>
 
                 <p class="mb-3">
-                    Open the local result viewer on your VPN-connected laptop, then
-                    search using your Advertising ID there.
+                    Launch the local Mac result viewer on your VPN-connected laptop,
+                    then search using your Advertising ID there.
                 </p>
 
                 <div class="d-flex gap-2 flex-wrap">
                     <button class="btn btn-dark" onclick="launchLocalResultViewer()">
-                        Launch Result Viewer
+                        Launch Local Mac Result Viewer
                     </button>
                     <button class="btn btn-outline-secondary" onclick="copyResultViewerURL()">
                         Copy Local Viewer URL
@@ -100,7 +100,10 @@
                         Expected local URL: <span id="resultViewerUrlText">{{ result_viewer_url }}</span>
                     </div>
                     <div class="form-text">
-                        If the page does not open, start the Streamlit result tool locally and stay connected to office VPN.
+                        This opens the locally installed Mac app, which starts the Streamlit result viewer if needed.
+                    </div>
+                    <div class="form-text">
+                        If nothing opens, make sure the Mac launcher is installed and stay connected to office VPN.
                     </div>
                 </div>
 
