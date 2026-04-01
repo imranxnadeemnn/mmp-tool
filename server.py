@@ -3,13 +3,18 @@ from macro_engine import apply_macros
 from qr import generate_qr
 from result_view import show_result
 from clickhouse_client import check_redash_connection
+from config import QUERY_ID, REDASH_URL
 
 app = Flask(__name__)
 
 
 @app.route("/")
 def home():
-    return render_template("index.html")
+    return render_template(
+        "index.html",
+        redash_url=REDASH_URL,
+        redash_query_id=QUERY_ID,
+    )
 
 
 # -------- Generate URL --------

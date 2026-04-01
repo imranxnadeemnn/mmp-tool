@@ -57,6 +57,18 @@
 
         <h5>Check Test Result</h5>
 
+        <div class="alert alert-info">
+            Result checks run directly from your browser to Redash. Use this
+            page while connected to office VPN and enter your Redash user API key.
+        </div>
+
+        <input id="redash_api_key" class="form-control mb-2"
+               placeholder="Enter your Redash user API key">
+
+        <div class="form-text mb-3">
+            The key is stored only in your browser on this laptop.
+        </div>
+
         <input id="advertising_id" class="form-control mb-3"
                placeholder="Enter GAID / IDFA">
 
@@ -76,6 +88,14 @@
 
 <!-- ================= JS (IMPORTANT: keep inside script tag) ================= -->
 <script>
+const REDASH_URL = {{ redash_url | tojson }};
+const REDASH_QUERY_ID = {{ redash_query_id | tojson }};
+const redashApiKeyInput = document.getElementById("redash_api_key");
+
+redashApiKeyInput.value = localStorage.getItem("redash_api_key") || "";
+redashApiKeyInput.addEventListener("input", () => {
+    localStorage.setItem("redash_api_key", redashApiKeyInput.value.trim());
+});
 
 async function generateURL() {
 
@@ -108,68 +128,171 @@ function copyURL() {
 }
 
 
+function renderRows(rows, resultDiv) {
+    if (!rows || rows.length === 0) {
+        resultDiv.innerHTML =
+            '<div class="alert alert-warning">No result found</div>';
+        return;
+    }
+
+    let html = "<table class='table table-striped'><thead><tr>";
+
+    Object.keys(rows[0]).forEach(k => {
+        html += `<th>${k}</th>`;
+    });
+
+    html += "</tr></thead><tbody>";
+
+    rows.forEach(row => {
+        html += "<tr>";
+        Object.values(row).forEach(v => {
+            html += `<td>${v}</td>`;
+        });
+        html += "</tr>";
+    });
+
+    html += "</tbody></table>";
+    resultDiv.innerHTML = html;
+}
+
+
+async function fetchRedashJson(url, options) {
+    const res = await fetch(url, options);
+    const text = await res.text();
+
+    let data = null;
+    try {
+        data = text ? JSON.parse(text) : {};
+    } catch (err) {
+        throw new Error(`Unexpected response from Redash (${res.status})`);
+    }
+
+    if (!res.ok) {
+        const message = data.message || data.error || text || `HTTP ${res.status}`;
+        throw new Error(message);
+    }
+
+    return data;
+}
+
+
 // Check result
 async function checkResult() {
 
     const adid = document.getElementById("advertising_id").value;
+    const apiKey = redashApiKeyInput.value.trim();
     const loader = document.getElementById("loader");
     const resultDiv = document.getElementById("resultSection");
+
+    if (!apiKey) {
+        resultDiv.innerHTML =
+            '<div class="alert alert-danger">Redash API key is required for browser-direct lookup.</div>';
+        return;
+    }
 
     loader.style.display = "block";
     resultDiv.innerHTML = "";
 
     try {
 
-        const res = await fetch("/check", {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ advertising_id: adid })
-        });
+        const headers = {
+            "Content-Type": "application/json",
+            "Authorization": `Key ${apiKey}`
+        };
 
-        const data = await res.json();
+        const payload = {
+            parameters: {
+                advertising_id: adid
+            },
+            max_age: 0
+        };
+
+        const startResponse = await fetchRedashJson(
+            `${REDASH_URL}/api/queries/${REDASH_QUERY_ID}/results`,
+            {
+                method: "POST",
+                headers,
+                body: JSON.stringify(payload)
+            }
+        );
+
+        const job = startResponse.job;
+        if (!job || !job.id) {
+            throw new Error("Redash did not return a job id");
+        }
+
+        const deadline = Date.now() + 20000;
+        let queryResultId = null;
+
+        while (Date.now() < deadline) {
+            const jobResponse = await fetchRedashJson(
+                `${REDASH_URL}/api/jobs/${job.id}`,
+                {
+                    method: "GET",
+                    headers
+                }
+            );
+
+            const jobState = jobResponse.job;
+            if (!jobState) {
+                throw new Error("Redash job response was empty");
+            }
+
+            if (jobState.status === 3) {
+                queryResultId = jobState.query_result_id;
+                break;
+            }
+
+            if (jobState.status === 4) {
+                throw new Error("Redash query failed");
+            }
+
+            await new Promise(resolve => setTimeout(resolve, 1000));
+        }
+
+        if (!queryResultId) {
+            throw new Error("Timed out waiting for Redash result");
+        }
+
+        const resultResponse = await fetchRedashJson(
+            `${REDASH_URL}/api/query_results/${queryResultId}`,
+            {
+                method: "GET",
+                headers
+            }
+        );
+
+        const rows = resultResponse.query_result?.data?.rows || [];
 
         loader.style.display = "none";
-
-        if (data.status === "empty") {
-            resultDiv.innerHTML =
-                '<div class="alert alert-warning">No result found</div>';
-            return;
-        }
-
-        if (data.status === "error") {
-            resultDiv.innerHTML =
-                `<div class="alert alert-danger">${data.message}</div>`;
-            return;
-        }
-
-        let html = "<table class='table table-striped'><thead><tr>";
-
-        Object.keys(data.data[0]).forEach(k => {
-            html += `<th>${k}</th>`;
-        });
-
-        html += "</tr></thead><tbody>";
-
-        data.data.forEach(row => {
-            html += "<tr>";
-            Object.values(row).forEach(v => {
-                html += `<td>${v}</td>`;
-            });
-            html += "</tr>";
-        });
-
-        html += "</tbody></table>";
-
-        resultDiv.innerHTML = html;
+        renderRows(rows, resultDiv);
 
     } catch (err) {
 
         loader.style.display = "none";
 
+        const corsHint = err.message.includes("Failed to fetch")
+            ? " This usually means Redash blocked the browser request with CORS or the VPN/network is not connected."
+            : "";
+
         resultDiv.innerHTML =
-            `<div class="alert alert-danger">Error: ${err.message}</div>`;
+            `<div class="alert alert-danger">Error: ${err.message}${corsHint}</div>`;
     }
 }
+
+redashApiKeyInput.addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        checkResult();
+    }
+});
+
+document.getElementById("advertising_id").addEventListener("keydown", event => {
+    if (event.key === "Enter") {
+        event.preventDefault();
+        checkResult();
+    }
+});
 
 </script>
 
