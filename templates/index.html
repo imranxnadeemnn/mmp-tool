@@ -82,17 +82,43 @@
                 </div>
 
                 <p class="mb-3">
+                    First time on a new Mac? Download and install the local result
+                    viewer once, then use the launch button below every day.
+                </p>
+
+                <p class="mb-3">
                     Launch the local Mac result viewer on your VPN-connected laptop,
                     then search using your Advertising ID there.
                 </p>
 
                 <div class="d-flex gap-2 flex-wrap">
+                    <a class="btn btn-outline-primary" href="/downloads/macos-result-viewer.zip">
+                        Download Mac Result Viewer
+                    </a>
                     <button class="btn btn-dark" onclick="launchLocalResultViewer()">
                         Launch Local Mac Result Viewer
                     </button>
                 </div>
 
                 <div class="mt-3">
+                    <div class="form-text">
+                        Setup after download:
+                    </div>
+                    <div class="form-text">
+                        1. Unzip `macos-result-viewer.zip`
+                    </div>
+                    <div class="form-text">
+                        2. Double-click `Install MMP Result Viewer.command`
+                    </div>
+                    <div class="form-text">
+                        3. If macOS blocks it, allow it in `System Settings -> Privacy & Security`
+                    </div>
+                    <div class="form-text">
+                        4. Enter your Redash API key when prompted
+                    </div>
+                    <div class="form-text">
+                        5. Stay connected to office VPN when checking results
+                    </div>
                     <div class="form-text">
                         Expected local URL: <span id="resultViewerUrlText">{{ result_viewer_url }}</span>
                     </div>

@@ -1,5 +1,6 @@
-from flask import Flask, request, jsonify, render_template
+from flask import Flask, request, jsonify, render_template, send_from_directory
 import requests
+from pathlib import Path
 from macro_engine import apply_macros
 from qr import generate_qr
 from result_view import show_result
@@ -12,6 +13,7 @@ from config import (
 )
 
 app = Flask(__name__)
+BASE_DIR = Path(__file__).resolve().parent
 
 
 @app.route("/")
@@ -148,6 +150,12 @@ def debug_proxy():
         payload["body"] = response.text
 
     return jsonify(payload), (200 if response.ok else 502)
+
+
+@app.route("/downloads/macos-result-viewer.zip", methods=["GET"])
+def download_macos_result_viewer():
+    downloads_dir = BASE_DIR / "distribution"
+    return send_from_directory(downloads_dir, "macos-result-viewer.zip", as_attachment=True)
 
 
 if __name__ == "__main__":
