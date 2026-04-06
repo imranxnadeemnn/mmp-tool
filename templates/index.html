@@ -111,13 +111,19 @@
                         2. Double-click `Install MMP Result Viewer.command`
                     </div>
                     <div class="form-text">
-                        3. If macOS blocks it, allow it in `System Settings -> Privacy & Security`
+                        3. If macOS blocks it, right-click the file and choose `Open`, or allow it in `System Settings -> Privacy & Security`
                     </div>
                     <div class="form-text">
                         4. Enter your Redash API key when prompted
                     </div>
                     <div class="form-text">
                         5. Stay connected to office VPN when checking results
+                    </div>
+                    <div class="form-text">
+                        6. If needed, remove the macOS quarantine flag in Terminal:
+                    </div>
+                    <div class="form-text">
+                        `xattr -d com.apple.quarantine "Install MMP Result Viewer.command"`
                     </div>
                     <div class="form-text">
                         Expected local URL: <span id="resultViewerUrlText">{{ result_viewer_url }}</span>
