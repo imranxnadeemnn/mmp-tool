@@ -45,10 +45,24 @@ source "$ENV_FILE"
 PORT="\${RESULT_VIEWER_PORT:-8501}"
 URL="http://localhost:\${PORT}"
 LOG_FILE="\${TMPDIR:-/tmp}/mmp_result_viewer.log"
+APP_DIR="$APP_DIR"
+PYTHON_BIN="$VENV_DIR/bin/python"
 
 if ! curl -fsS "\$URL" >/dev/null 2>&1; then
-  nohup "$VENV_DIR/bin/streamlit" run "$APP_DIR/local_result_viewer.py" --server.port "\$PORT" >"\$LOG_FILE" 2>&1 &
-  sleep 3
+  cd "\$APP_DIR"
+  nohup "\$PYTHON_BIN" -m streamlit run local_result_viewer.py --server.address 127.0.0.1 --server.port "\$PORT" >"\$LOG_FILE" 2>&1 &
+
+  for _ in {1..20}; do
+    if curl -fsS "\$URL" >/dev/null 2>&1; then
+      break
+    fi
+    sleep 1
+  done
+fi
+
+if ! curl -fsS "\$URL" >/dev/null 2>&1; then
+  osascript -e 'display alert "MMP Result Viewer could not be started. Please check /tmp/mmp_result_viewer.log"'
+  exit 1
 fi
 
 open "\$URL"
