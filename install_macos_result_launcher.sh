@@ -11,13 +11,15 @@ RUNNER_SCRIPT="$INSTALL_ROOT/run_result_viewer.sh"
 ENV_FILE="$INSTALL_ROOT/viewer.env"
 APPLE_SCRIPT="$INSTALL_ROOT/launcher.applescript"
 INSTALL_LOG="/tmp/mmp_result_viewer_install.log"
+STREAMLIT_CONFIG_DIR="$INSTALL_ROOT/streamlit"
+STREAMLIT_CONFIG_FILE="$STREAMLIT_CONFIG_DIR/config.toml"
 
 exec > >(tee -a "$INSTALL_LOG") 2>&1
 
 echo "Starting MMP Result Viewer install at $(date)"
 echo "Installer folder: $SCRIPT_DIR"
 
-mkdir -p "$APP_DIR" "$HOME/Applications"
+mkdir -p "$APP_DIR" "$HOME/Applications" "$STREAMLIT_CONFIG_DIR"
 
 for file in local_result_viewer.py result_view.py clickhouse_client.py config.py; do
   cp "$SCRIPT_DIR/$file" "$APP_DIR/$file"
@@ -29,6 +31,15 @@ fi
 
 "$VENV_DIR/bin/pip" install --upgrade pip >/dev/null
 "$VENV_DIR/bin/pip" install streamlit requests pandas >/dev/null
+
+cat > "$STREAMLIT_CONFIG_FILE" <<EOF
+[browser]
+gatherUsageStats = false
+
+[server]
+headless = true
+address = "127.0.0.1"
+EOF
 
 if [ ! -f "$ENV_FILE" ]; then
   REDASH_API_KEY="$(osascript <<'APPLESCRIPT'
@@ -53,6 +64,7 @@ URL="http://127.0.0.1:\${PORT}"
 LOG_FILE="/tmp/mmp_result_viewer.log"
 APP_DIR="$APP_DIR"
 PYTHON_BIN="$VENV_DIR/bin/python"
+export STREAMLIT_CONFIG_DIR="$STREAMLIT_CONFIG_DIR"
 
 echo "Starting MMP Result Viewer at \$(date)" >> "\$LOG_FILE"
 echo "App dir: \$APP_DIR" >> "\$LOG_FILE"
@@ -60,7 +72,7 @@ echo "Python: \$PYTHON_BIN" >> "\$LOG_FILE"
 
 if ! curl -fsS "\$URL" >/dev/null 2>&1; then
   cd "\$APP_DIR"
-  nohup "\$PYTHON_BIN" -m streamlit run local_result_viewer.py --server.address 127.0.0.1 --server.port "\$PORT" >"\$LOG_FILE" 2>&1 &
+  nohup "\$PYTHON_BIN" -m streamlit run local_result_viewer.py --server.headless true --browser.gatherUsageStats false --server.address 127.0.0.1 --server.port "\$PORT" >"\$LOG_FILE" 2>&1 &
 
   for _ in {1..20}; do
     if curl -fsS "\$URL" >/dev/null 2>&1; then
