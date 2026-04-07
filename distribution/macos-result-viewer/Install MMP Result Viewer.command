@@ -43,7 +43,7 @@ cat > "$RUNNER_SCRIPT" <<EOF
 set -euo pipefail
 source "$ENV_FILE"
 PORT="\${RESULT_VIEWER_PORT:-8501}"
-URL="http://localhost:\${PORT}"
+URL="http://127.0.0.1:\${PORT}"
 LOG_FILE="\${TMPDIR:-/tmp}/mmp_result_viewer.log"
 APP_DIR="$APP_DIR"
 PYTHON_BIN="$VENV_DIR/bin/python"

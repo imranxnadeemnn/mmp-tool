@@ -35,7 +35,7 @@ cd /Users/inadeem/Documents/mmp_tool
 - In `Generate URL`, generate one known tracking URL.
 - In `View Result`, click `Launch Local Mac Result Viewer`.
 - Allow the browser to open the `mmptool://` link.
-- Confirm one local browser tab opens to `http://localhost:8501`.
+- Confirm one local browser tab opens to `http://127.0.0.1:8501`.
 - Search for a known-good Advertising ID and confirm rows appear.
 
 ## Team Launch Notes

@@ -73,7 +73,7 @@ cd /Users/inadeem/Documents/mmp_tool
 open ~/Applications/"MMP Result Viewer Launcher.app"
 ```
 
-### Localhost opens but no results are returned
+### Local viewer opens but no results are returned
 
 - Make sure office VPN is connected.
 - Re-enter your Advertising ID carefully.

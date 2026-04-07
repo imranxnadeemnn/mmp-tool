@@ -24,7 +24,7 @@ This folder is a shareable one-time installer for the local Redash result viewer
 3. Click `Launch Local Mac Result Viewer`.
 4. Allow the `mmptool://` prompt if the browser asks.
 
-The local viewer will open at `http://localhost:8501`.
+The local viewer will open at `http://127.0.0.1:8501`.
 
 ## Troubleshooting
 

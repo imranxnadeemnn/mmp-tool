@@ -5,7 +5,7 @@ set -euo pipefail
 SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
 APP_FILE="$SCRIPT_DIR/local_result_viewer.py"
 PORT="${RESULT_VIEWER_PORT:-8501}"
-URL="http://localhost:${PORT}"
+URL="http://127.0.0.1:${PORT}"
 LOG_FILE="${TMPDIR:-/tmp}/mmp_result_viewer.log"
 
 if ! command -v python3 >/dev/null 2>&1; then
