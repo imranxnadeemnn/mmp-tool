@@ -10,6 +10,12 @@ LAUNCHER_APP="$HOME/Applications/MMP Result Viewer Launcher.app"
 RUNNER_SCRIPT="$INSTALL_ROOT/run_result_viewer.sh"
 ENV_FILE="$INSTALL_ROOT/viewer.env"
 APPLE_SCRIPT="$INSTALL_ROOT/launcher.applescript"
+INSTALL_LOG="/tmp/mmp_result_viewer_install.log"
+
+exec > >(tee -a "$INSTALL_LOG") 2>&1
+
+echo "Starting MMP Result Viewer install at $(date)"
+echo "Installer folder: $SCRIPT_DIR"
 
 mkdir -p "$APP_DIR" "$HOME/Applications"
 
@@ -44,9 +50,13 @@ set -euo pipefail
 source "$ENV_FILE"
 PORT="\${RESULT_VIEWER_PORT:-8501}"
 URL="http://127.0.0.1:\${PORT}"
-LOG_FILE="\${TMPDIR:-/tmp}/mmp_result_viewer.log"
+LOG_FILE="/tmp/mmp_result_viewer.log"
 APP_DIR="$APP_DIR"
 PYTHON_BIN="$VENV_DIR/bin/python"
+
+echo "Starting MMP Result Viewer at \$(date)" >> "\$LOG_FILE"
+echo "App dir: \$APP_DIR" >> "\$LOG_FILE"
+echo "Python: \$PYTHON_BIN" >> "\$LOG_FILE"
 
 if ! curl -fsS "\$URL" >/dev/null 2>&1; then
   cd "\$APP_DIR"
@@ -92,4 +102,5 @@ osacompile -o "$LAUNCHER_APP" "$APPLE_SCRIPT" >/dev/null
 /usr/libexec/PlistBuddy -c "Set :CFBundleName MMP Result Viewer Launcher" "$LAUNCHER_APP/Contents/Info.plist"
 
 osascript -e 'display notification "MMP Result Viewer Launcher installed in Applications." with title "MMP Tool"'
+echo "Install complete at $(date)"
 open "$LAUNCHER_APP"
