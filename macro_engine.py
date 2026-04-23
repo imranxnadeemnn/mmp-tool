@@ -16,6 +16,8 @@ def apply_macros(url, platform):
     Replace supported local macros:
     - {bundle_id}
     - {click_id}
+    - {campaign_name}
+    - {creative_name}
     """
 
     if not url:
@@ -40,7 +42,15 @@ def apply_macros(url, platform):
     url = url.replace("{click_id}", click_id)
 
     # ------------------------------
-    # STEP 3: Apply AppsFlyer signing only for AppsFlyer links
+    # STEP 3: Campaign/Creative names
+    # ------------------------------
+    campaign_name = f"campaign_{uuid.uuid4().hex[:10]}"
+    creative_name = f"creative_{uuid.uuid4().hex[:10]}"
+    url = url.replace("{campaign_name}", campaign_name)
+    url = url.replace("{creative_name}", creative_name)
+
+    # ------------------------------
+    # STEP 4: Apply AppsFlyer signing only for AppsFlyer links
     # ------------------------------
     if should_sign_with_appsflyer(url):
         url = sign_tracking_url(url)
