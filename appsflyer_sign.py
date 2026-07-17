@@ -1,11 +1,12 @@
+import os
 import time
 import uuid
 import jwt
 from urllib.parse import urlparse, parse_qs
 
 
-# 🔐 Replace with your real S2S token
-AF_S2S_TOKEN = "9002b474-e5cb-4f73-a305-15b62bf95bda"
+# AppsFlyer S2S token — supplied via environment variable. Never hardcode secrets.
+AF_S2S_TOKEN = os.getenv("AF_S2S_TOKEN", "")
 
 
 def extract_params_from_url(url):
@@ -87,6 +88,9 @@ def sign_tracking_url(url):
     app_id = get_app_id_from_url(url)
 
     payload = build_payload(params, app_id)
+
+    if not AF_S2S_TOKEN:
+        raise RuntimeError("AF_S2S_TOKEN is not configured")
 
     token = jwt.encode(payload, AF_S2S_TOKEN, algorithm="HS256")
 
