@@ -1,13 +1,9 @@
-from clickhouse_client import get_result
+from clickhouse_client import get_results
 
 
-def show_result(adid):
-
-    if not adid:
-        return "Advertising ID required"
-
+def show_result():
     try:
-        df = get_result(adid)
+        df = get_results()
     except Exception as e:
         return str(e)
 

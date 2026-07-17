@@ -7,7 +7,7 @@ from flask import Flask, jsonify, request
 
 REDASH_URL = os.getenv("REDASH_URL", "https://redash.aarki.org").rstrip("/")
 API_KEY = os.getenv("REDASH_API_KEY", os.getenv("API_KEY", ""))
-QUERY_ID = int(os.getenv("REDASH_QUERY_ID", "28702"))
+QUERY_ID = int(os.getenv("REDASH_QUERY_ID", "31230"))
 PROXY_AUTH_TOKEN = os.getenv("PROXY_AUTH_TOKEN", "")
 REQUEST_TIMEOUT = int(os.getenv("REDASH_REQUEST_TIMEOUT", "10"))
 POLL_TIMEOUT = int(os.getenv("REDASH_POLL_TIMEOUT", "20"))
@@ -57,21 +57,12 @@ def proxy_check():
     if not is_authorized():
         return unauthorized_response()
 
-    data = request.json or {}
-    adid = data.get("advertising_id")
-
-    if not adid:
-        return jsonify({"status": "error", "message": "advertising_id is required"}), 400
-
     if not API_KEY:
         return jsonify({"status": "error", "message": "REDASH_API_KEY is not configured"}), 500
 
     try:
         url = f"{REDASH_URL}/api/queries/{QUERY_ID}/results"
         payload = {
-            "parameters": {
-                "advertising_id": adid
-            },
             "max_age": 0
         }
 

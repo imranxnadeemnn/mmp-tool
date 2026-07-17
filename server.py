@@ -47,9 +47,6 @@ def generate():
 @app.route("/check", methods=["POST"])
 def check():
 
-    data = request.json or {}
-    adid = data.get("advertising_id")
-
     if RESULT_PROXY_URL:
         headers = {"Content-Type": "application/json"}
         if RESULT_PROXY_TOKEN:
@@ -59,11 +56,11 @@ def check():
             response = requests.post(
                 f"{RESULT_PROXY_URL}/proxy-check",
                 headers=headers,
-                json={"advertising_id": adid},
+                json={},
                 timeout=RESULT_PROXY_TIMEOUT,
             )
         except requests.RequestException as exc:
-            app.logger.exception("Proxy request failed for advertising_id=%s", adid)
+            app.logger.exception("Proxy request failed")
             return jsonify({
                 "status": "error",
                 "message": f"Unable to reach internal VPN proxy: {exc}",
@@ -80,9 +77,9 @@ def check():
         return jsonify(proxy_data), response.status_code
 
     try:
-        res = show_result(adid)
+        res = show_result()
     except Exception as e:
-        app.logger.exception("Redash check failed for advertising_id=%s", adid)
+        app.logger.exception("Redash check failed")
         return jsonify({"status": "error", "message": str(e)})
 
     if res is None:
@@ -100,16 +97,7 @@ def check():
 @app.route("/debug/redash", methods=["POST"])
 def debug_redash():
 
-    data = request.json or {}
-    adid = data.get("advertising_id")
-
-    if not adid:
-        return jsonify({
-            "status": "error",
-            "message": "advertising_id is required"
-        }), 400
-
-    result = check_redash_connection(adid)
+    result = check_redash_connection()
     status_code = 200 if result.get("ok") else 502
     return jsonify(result), status_code
 

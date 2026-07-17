@@ -50,7 +50,7 @@ APPLESCRIPT
   cat > "$ENV_FILE" <<EOF
 export REDASH_API_KEY="$REDASH_API_KEY"
 export REDASH_URL="https://redash.aarki.org"
-export REDASH_QUERY_ID="28702"
+export REDASH_QUERY_ID="31230"
 export RESULT_VIEWER_PORT="8501"
 EOF
 fi
