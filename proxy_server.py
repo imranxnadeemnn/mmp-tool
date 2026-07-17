@@ -9,9 +9,10 @@ REDASH_URL = os.getenv("REDASH_URL", "https://redash.aarki.org").rstrip("/")
 API_KEY = os.getenv("REDASH_API_KEY", os.getenv("API_KEY", ""))
 QUERY_ID = int(os.getenv("REDASH_QUERY_ID", "31230"))
 PROXY_AUTH_TOKEN = os.getenv("PROXY_AUTH_TOKEN", "")
-REQUEST_TIMEOUT = int(os.getenv("REDASH_REQUEST_TIMEOUT", "10"))
-POLL_TIMEOUT = int(os.getenv("REDASH_POLL_TIMEOUT", "20"))
+REQUEST_TIMEOUT = int(os.getenv("REDASH_REQUEST_TIMEOUT", "30"))
+POLL_TIMEOUT = int(os.getenv("REDASH_POLL_TIMEOUT", "60"))
 POLL_INTERVAL = float(os.getenv("REDASH_POLL_INTERVAL", "1"))
+RESULT_MAX_AGE = int(os.getenv("REDASH_RESULT_MAX_AGE", "10"))
 
 headers = {
     "Authorization": f"Key {API_KEY}"
@@ -63,7 +64,7 @@ def proxy_check():
     try:
         url = f"{REDASH_URL}/api/queries/{QUERY_ID}/results"
         payload = {
-            "max_age": 0
+            "max_age": RESULT_MAX_AGE
         }
 
         response = requests.post(
@@ -76,7 +77,16 @@ def proxy_check():
         if response.status_code != 200:
             return jsonify({"status": "error", "message": response.text}), response.status_code
 
-        job = response.json().get("job")
+        body = response.json()
+
+        # Cache hit: Redash returns the result directly (no job to poll).
+        if body.get("query_result"):
+            rows = body["query_result"]["data"]["rows"]
+            if not rows:
+                return jsonify({"status": "empty"})
+            return jsonify({"status": "success", "data": rows})
+
+        job = body.get("job")
         if not job:
             return jsonify({"status": "error", "message": "No job returned from Redash"}), 502
 

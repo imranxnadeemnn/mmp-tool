@@ -10,6 +10,7 @@ from config import (
     REDASH_POLL_INTERVAL,
     REDASH_POLL_TIMEOUT,
     REDASH_REQUEST_TIMEOUT,
+    REDASH_RESULT_MAX_AGE,
     REDASH_URL,
 )
 
@@ -28,7 +29,7 @@ def _run_query():
         raise Exception("REDASH_API_KEY is not configured")
 
     url = f"{REDASH_URL}/api/queries/{QUERY_ID}/results"
-    payload = {"max_age": 0}
+    payload = {"max_age": REDASH_RESULT_MAX_AGE}
 
     try:
         r = requests.post(
@@ -43,7 +44,13 @@ def _run_query():
     if r.status_code != 200:
         raise Exception(f"POST failed: {r.text}")
 
-    job = r.json().get("job")
+    body = r.json()
+
+    # Cache hit: Redash returns the result directly (no job to poll).
+    if body.get("query_result"):
+        return body["query_result"]["data"]["rows"]
+
+    job = body.get("job")
     if not job:
         raise Exception("No job returned from Redash")
 
