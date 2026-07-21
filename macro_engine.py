@@ -5,10 +5,15 @@ from appsflyer_sign import sign_tracking_url
 from config import ANDROID_BUNDLE, IOS_BUNDLE
 
 
+# AppsFlyer-owned domains whose tracking links require af_sig signing.
+# Includes OneLink branded/custom links (e.g. brand.onelink.me).
+AF_SIGNING_DOMAINS = ("appsflyer.com", "onelink.me")
+
+
 def should_sign_with_appsflyer(url):
     parsed = urlparse(url)
     host = parsed.netloc.lower()
-    return "appsflyer.com" in host
+    return any(domain in host for domain in AF_SIGNING_DOMAINS)
 
 
 def apply_macros(url, platform):
