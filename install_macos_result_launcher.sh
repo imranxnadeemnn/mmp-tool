@@ -25,6 +25,9 @@ for file in local_result_viewer.py result_view.py clickhouse_client.py config.py
   cp "$SCRIPT_DIR/$file" "$APP_DIR/$file"
 done
 
+# Stop any viewer already running with old code, so the next launch loads the new version.
+pkill -f local_result_viewer.py 2>/dev/null || true
+
 if [ ! -d "$VENV_DIR" ]; then
   python3 -m venv "$VENV_DIR"
 fi
@@ -53,6 +56,13 @@ export REDASH_URL="https://redash.aarki.org"
 export REDASH_QUERY_ID="31230"
 export RESULT_VIEWER_PORT="8501"
 EOF
+else
+  # Existing install: migrate the query ID to the current one, keeping the saved API key.
+  if grep -q 'REDASH_QUERY_ID' "$ENV_FILE"; then
+    /usr/bin/sed -i '' 's/REDASH_QUERY_ID="[0-9]*"/REDASH_QUERY_ID="31230"/' "$ENV_FILE"
+  else
+    echo 'export REDASH_QUERY_ID="31230"' >> "$ENV_FILE"
+  fi
 fi
 
 cat > "$RUNNER_SCRIPT" <<EOF
