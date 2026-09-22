@@ -26,5 +26,8 @@ CH_USER = os.getenv("CH_USER", "default")
 CH_PASS = os.getenv("CH_PASS", "")
 CH_DB = os.getenv("CH_DB", "post")
 
+# APK Download Tool (separate Render service, embedded as the third tab).
+APK_TOOL_URL = os.getenv("APK_TOOL_URL", "https://apk-download-tool.onrender.com").rstrip("/")
+
 ANDROID_BUNDLE = os.getenv("ANDROID_BUNDLE", "com.mmp.testtool")
 IOS_BUNDLE = os.getenv("IOS_BUNDLE", "com.mmp.testtool.ios")
