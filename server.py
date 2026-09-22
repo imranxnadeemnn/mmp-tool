@@ -6,6 +6,7 @@ from qr import generate_qr
 from result_view import show_result
 from clickhouse_client import check_redash_connection
 from config import (
+    APK_TOOL_URL,
     RESULT_PROXY_TIMEOUT,
     RESULT_PROXY_TOKEN,
     RESULT_PROXY_URL,
@@ -22,6 +23,7 @@ def home():
         "index.html",
         result_proxy_enabled=bool(RESULT_PROXY_URL),
         result_viewer_url=RESULT_VIEWER_URL,
+        apk_tool_url=APK_TOOL_URL,
     )
 
 
